@@ -78,7 +78,7 @@ public class RemoteRestController {
         innerFrame.locator(field.getXpath()).clear();
         try {
             innerFrame.locator(field.getXpath()).type(field.getValue());
-            TimeUnit.SECONDS.sleep(1);
+           // TimeUnit.SECONDS.sleep(1);
 
             String value = innerFrame.locator(field.getXpath()).inputValue();
             System.out.println("value:" + value);
@@ -86,8 +86,6 @@ public class RemoteRestController {
         }catch (com.microsoft.playwright.PlaywrightException pe){
             return new ResponseEntity<String>("{\"ret\":\"ok\" ,\"value\": \"\" }", HttpStatus.OK);
 
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 
