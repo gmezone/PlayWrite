@@ -1,22 +1,19 @@
-# Use the official Maven image for building your Spring Boot application
-FROM maven:3.8.4-openjdk-17 AS build
-# Set the working directory in the container
+# Copy the Maven POM file and download the dependencies
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+# Copy the source code and build the Spring Boot application
+COPY src src
+RUN mvn package -DskipTests
+
+# Use the official OpenJDK image for Java 17 as the runtime stage
+FROM adoptopenjdk:17-jre-hotspot
 WORKDIR /app
 
-# Copy the Maven project definition and download dependencies
-COPY pom.xml .
-# Copy the source code into the container
-COPY src ./src
-
-
-# Build the Spring Boot application
-RUN mvn clean package
-RUN java -jar target/PlayWrite-1.0-SNAPSHOT.jar
-
-# Copy the JAR file built in the previous stage into the container
+# Copy the built JAR file from the previous stage
 COPY --from=build /app/target/PlayWrite-1.0-SNAPSHOT.jar app.jar
 
-# Expose the port that your Spring Boot application will run on (default is 8080)
+# Expose port 443
 EXPOSE 443
 
 # Specify the command to run your Spring Boot application
