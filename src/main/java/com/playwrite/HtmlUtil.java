@@ -37,6 +37,14 @@ public class HtmlUtil {
                 link.attr("href" ,href);
             }
         }
+        Elements as = doc.getElementsByTag("a");
+        for (Element a : as) {
+            String href = a.attr("href");
+            if (href.startsWith("/")) {
+                href = host + href;
+                a.attr("href" ,href);
+            }
+        }
     }
 
     static public void fixScript(Document doc, String host) {
@@ -44,8 +52,10 @@ public class HtmlUtil {
         for (Element script : scripts) {
             String src = script.attr("src");
             if (src.startsWith("/")) {
+                System.out.println(src);
                 src = host + src;
-                script.attr("src" ,src);
+                System.out.println(src);
+               // script.attr("src" ,src);
             }
         }
 

