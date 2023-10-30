@@ -23,7 +23,7 @@ WORKDIR /app
 COPY --from=build /app/target/PlayWrite-1.0-SNAPSHOT.jar app.jar
 
 # Expose the port that your Spring Boot application will run on (default is 8080)
-EXPOSE 8080
+EXPOSE 443
 
 # Specify the command to run your Spring Boot application
 CMD ["java", "-jar", "app.jar"]
