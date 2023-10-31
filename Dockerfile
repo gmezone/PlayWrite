@@ -1,20 +1,25 @@
-# Copy the Maven POM file and download the dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline
+# Use the official maven/Java 11 image to create a build artifact.
+# https://hub.docker.com/_/maven
+FROM maven:3-openjdk-18-slim AS build-env
+#FROM maven:3-j
 
-# Copy the source code and build the Spring Boot application
-COPY src src
+# Set the working directory to /app
+WORKDIR /app
+# Copy the pom.xml file to download dependencies
+COPY pom.xml ./
+# Copy local code to the container image.
+COPY src ./src
+
+# Download dependencies and build a release artifact.
 RUN mvn package -DskipTests
 
-# Use the official OpenJDK image for Java 17 as the runtime stage
-FROM adoptopenjdk:17-jre-hotspot
-WORKDIR /app
+# Use OpenJDK for base image.
+# https://hub.docker.com/_/openjdk
+# https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
+#FROM openjdk:11.0.16-jre-slim
+FROM openjdk:18-ea-1-jdk-slim
+# Copy the jar to the production image from the builder stage.
+COPY --from=build-env /app/target/play-write-*.war /play-write.war
 
-# Copy the built JAR file from the previous stage
-COPY --from=build /app/target/PlayWrite-1.0-SNAPSHOT.jar app.jar
-
-# Expose port 443
-EXPOSE 443
-
-# Specify the command to run your Spring Boot application
-CMD ["java", "-jar", "app.jar"]
+# Run the web service on container startup.
+CMD ["java", "-jar", "/play-write.war"]
