@@ -7,7 +7,7 @@ WORKDIR /app
 COPY pom.xml ./
 # Copy local code to the container image.
 COPY src ./src
-
+COPY keystore.p12 ./
 # Download dependencies and build a release artifact.
 RUN mvn package -DskipTests
 
@@ -17,7 +17,8 @@ RUN mvn package -DskipTests
 #FROM openjdk:11.0.16-jre-slim
 FROM openjdk:18-ea-1-jdk-slim
 # Copy the jar to the production image from the builder stage.
-COPY --from=build-env /app/target/PlayWrite-*.war /PlayWrite.war
+COPY --from=build-env /app/target/PlayWrite-*.jar /PlayWrite.jar
+
 
 # Run the web service on container startup.
-CMD ["java", "-jar", "/PlayWrite.war"]
+CMD ["java", "-jar", "/PlayWrite.jar"]
