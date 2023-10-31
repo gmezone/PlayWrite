@@ -1,14 +1,23 @@
-# Use the official OpenJDK base image for Java 8
-FROM openjdk:8-jre-alpine
+FROM maven:3-openjdk-18-slim AS build-env
+#FROM maven:3-j
 
-# Set the working directory in the container
+# Set the working directory to /app
 WORKDIR /app
+# Copy the pom.xml file to download dependencies
+COPY pom.xml ./
+# Copy local code to the container image.
+COPY src ./src
 
-# Copy the JAR file from your target directory to the container
-COPY target/PlayWrite-1.0-SNAPSHOT.jar app.jar
+# Download dependencies and build a release artifact.
+RUN mvn package -DskipTests
 
-# Expose the port that your Spring Boot application will run on (default is 8080)
-EXPOSE 8080
+# Use OpenJDK for base image.
+# https://hub.docker.com/_/openjdk
+# https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
+#FROM openjdk:11.0.16-jre-slim
+FROM openjdk:18-ea-1-jdk-slim
+# Copy the jar to the production image from the builder stage.
+COPY --from=build-env /app/target/PlayWrite-*.war /PlayWrite.war
 
-# Specify the command to run your Spring Boot application
-CMD ["java", "-jar", "app.jar"]
+# Run the web service on container startup.
+CMD ["java", "-jar", "/PlayWrite.war"]
